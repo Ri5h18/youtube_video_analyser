@@ -13,10 +13,13 @@ from langchain.schema import Document
 from yt_dlp import YoutubeDL
 import requests
 
-# ========== CONFIG ==========
-RAPIDAPI_KEY = "9bf414ebeemsh3266a2940239b68p1c2ff1jsn21df8793885c"
-GEMINI_KEY = "AIzaSyD_6yIASHojj1Of_pKMtqHAhkQdwzhK3p0"
+from dotenv import load_dotenv
+import os
 
+load_dotenv()  # Loads the .env file into environment variables
+
+RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
+GEMINI_KEY = os.getenv("GEMINI_KEY")
 genai.configure(api_key=GEMINI_KEY)
 model = genai.GenerativeModel("gemma-3-27b-it")
 embed_model = SentenceTransformer("all-MiniLM-L6-v2")
