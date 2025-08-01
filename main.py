@@ -20,6 +20,8 @@ load_dotenv()  # Loads the .env file into environment variables
 
 RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
 GEMINI_KEY = os.getenv("GEMINI_KEY")
+
+
 genai.configure(api_key=GEMINI_KEY)
 model = genai.GenerativeModel("gemma-3-27b-it")
 embed_model = SentenceTransformer("all-MiniLM-L6-v2")
