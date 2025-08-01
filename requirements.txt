@@ -1,0 +1,16 @@
+numpy
+faiss
+langchain.text_splitter
+sentence_transformers
+langchain.schema
+google.generativeai
+fastapi
+uvicorn
+google-generativeai
+faiss-cpu
+numpy
+langchain
+sentence-transformers
+yt-dlp
+requests
+jinja2
