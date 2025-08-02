@@ -12,3 +12,4 @@ python-dotenv==1.0.1
 huggingface_hub==0.20.3
 python-multipart
 scikit-learn
+youtube_transcript_api
