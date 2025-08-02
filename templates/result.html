@@ -8,7 +8,7 @@
 </head>
 <body class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 text-white font-sans p-8">
 
-  <div class="max-w-4xl mx-auto bg-gray-900 rounded-2xl shadow-lg p-10 space-y-8 border border-gray-700">
+  <div class="max-w-6xl mx-auto bg-gray-900 rounded-2xl shadow-lg p-10 space-y-8 border border-gray-700">
     <h1 class="text-3xl font-bold text-teal-400 flex items-center gap-2">
       <i class='bx bx-analyse'></i> Analysis Result
     </h1>
@@ -18,48 +18,84 @@
       <p><strong><i class='bx bx-time'></i> Duration:</strong> <span class="text-gray-300">{{ duration }}</span></p>
       <p><strong><i class='bx bx-calendar'></i> Upload Date:</strong> <span class="text-gray-300">{{ upload_date }}</span></p>
     </div>
+   <div class="aspect-w-16 aspect-h-9">
+  <iframe class="w-full h-96 rounded-xl"
+    src="https://www.youtube.com/embed/{{ video_id }}"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen>
+  </iframe>
+</div>
 
+    <!-- Summary Section -->
     <div>
-      <h2 class="text-2xl font-semibold text-blue-300 flex items-center gap-2">
+      <button onclick="toggleSection('summary')" class="w-full text-left text-2xl font-semibold text-blue-300 flex items-center gap-2 focus:outline-none">
         <i class='bx bx-edit-alt'></i> Summary
-      </h2>
-      <p class="mt-2 text-gray-200">{{ summary }}</p>
-    </div>
-
-    <div>
-      <h2 class="text-2xl font-semibold text-yellow-300 flex items-center gap-2">
-        <i class='bx bx-layer'></i> Flashcards
-      </h2>
-      <div class="space-y-4 mt-2">
-        {% for card in flashcards.split('\n') if card %}
-          {% if card.startswith("Q:") %}
-            <div class="p-4 rounded-xl bg-gray-800 border border-yellow-500">
-              <h3 class="text-lg font-bold text-yellow-200 flex items-center gap-1">
-                <i class='bx bx-question-mark'></i> {{ card }}
-              </h3>
-          {% elif card.startswith("A:") %}
-              <p class="text-gray-100 mt-1 flex items-center gap-1">
-                <i class='bx bx-check-circle'></i> {{ card }}
-              </p></div>
-          {% endif %}
-        {% endfor %}
+        <i class='bx bx-chevron-down ml-auto'></i>
+      </button>
+      <div id="summary" class="mt-2 hidden transition-all duration-300 ease-in-out">
+        <p class="text-gray-200">{{ summary }}</p>
       </div>
     </div>
 
+   <!-- Flashcards Section -->
+<div>
+  <button onclick="toggleSection('flashcards')" class="w-full text-left text-2xl font-semibold text-yellow-300 flex items-center gap-2 focus:outline-none">
+    <i class='bx bx-layer'></i> Flashcards
+    <i class='bx bx-chevron-down ml-auto'></i>
+  </button>
+  <div id="flashcards" class="mt-2 hidden transition-all duration-300 ease-in-out space-y-4">
+     <form action="/flashcards" method="POST">
+  <input type="hidden" name="video_id" value="{{ video_id }}">
+  <button type="submit"
+          class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md shadow-md">
+    <i class='bx bx-refresh'></i> Generate More
+  </button>
+</form>
+    <button onclick="downloadFlashcards()" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md shadow-md mt-4">
+  <i class='bx bx-download'></i> Download Flashcards
+</button>
+     {% set counter = 0 %}
+    {% for line in flashcards.split('\n') if line %}
+      {% if line.startswith("Q:") %}
+        <div class="rounded-xl bg-gray-800 border border-yellow-500 p-4 space-y-2">
+          <button onclick="toggleSection('card{{ loop.index0 }}')"  class="w-full text-left flex items-center gap-2 font-bold text-yellow-200">
+            <i class='bx bx-question-mark'></i> {{ line }}
+            <i class='bx bx-chevron-down ml-auto'></i>
+          </button>
+          <div id="card{{ loop.index0 }}" class="hidden pl-6 text-gray-100">
+      {% elif line.startswith("A:") %}
+            <p class="flex items-center gap-1">
+              <i class='bx bx-check-circle'></i> {{ line }}
+            </p>
+          </div>
+        </div>
+        {% set counter = counter + 1 %}
+      {% endif %}
+    {% endfor %}
+  </div>
+ 
+</div>
+
+
+    <!-- Ask a Question Section -->
     <div>
-      <h2 class="text-2xl font-semibold text-pink-300 flex items-center gap-2">
+      <button onclick="toggleSection('ask')" class="w-full text-left text-2xl font-semibold text-pink-300 flex items-center gap-2 focus:outline-none">
         <i class='bx bx-search-alt-2'></i> Ask a Question
-      </h2>
-      <form action="/ask" method="POST" class="mt-4 space-y-4">
-        <input type="hidden" name="video_id" value="{{ video_id }}">
-        <input type="text" name="query" required
-               class="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500"
-               placeholder="Type your question here...">
-        <button type="submit"
-                class="px-6 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg shadow-md flex items-center gap-2">
-          <i class='bx bx-send'></i> Ask
-        </button>
-      </form>
+        <i class='bx bx-chevron-down ml-auto'></i>
+      </button>
+      <div id="ask" class="mt-4 hidden space-y-4 transition-all duration-300 ease-in-out">
+        <form action="/ask" method="POST">
+          <input type="hidden" name="video_id" value="{{ video_id }}">
+          <input type="text" name="query" required
+                class="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                placeholder="Type your question here...">
+          <button type="submit"
+                  class="px-6 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg shadow-md flex items-center gap-2">
+            <i class='bx bx-send'></i> Ask
+          </button>
+        </form>
+      </div>
     </div>
 
     {% if answer %}
@@ -78,5 +114,24 @@
     </div>
   </div>
 
+  <!-- JavaScript for toggling -->
+  <script>
+    function toggleSection(id) {
+      const el = document.getElementById(id);
+      el.classList.toggle("hidden");
+    }
+
+    function downloadFlashcards() {
+    const flashcardsText = `{{ flashcards | replace("&#39;", "'") | replace("&quot;", '"') | replace("&amp;", "&") }}`;
+    const blob = new Blob([flashcardsText], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "flashcards.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  </script>
 </body>
 </html>

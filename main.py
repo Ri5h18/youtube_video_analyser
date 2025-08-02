@@ -32,9 +32,10 @@ client = genai.Client(api_key=GEMINI_KEY)
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=200)
 templates = Jinja2Templates(directory="templates")
 app = FastAPI()
+# to prevent re embedding and etc
 cache = {}
 
-# ========== FUNCTIONS ==========
+# 
 
 def get_transcript(video_id):
     try:
@@ -116,6 +117,37 @@ Transcript:
     logger.debug("Flashcards generated")
     return response.text.strip()
 
+
+
+def generate_additional_flashcards(transcript_text, existing_flashcards=None, num_cards=5):
+    logger.info(f"Generating {num_cards} additional flashcards")
+
+    prompt = f"""
+You are an AI assistant. Based on the following transcript, generate {num_cards} new flashcards that are not duplicates or paraphrases of existing ones.
+
+Each flashcard should follow the format:
+Q: <question>
+A: <answer>
+
+Keep answers short and relevant.
+
+Transcript:
+\"\"\"{transcript_text}\"\"\"
+
+Existing flashcards:
+\"\"\"{existing_flashcards or 'None'}\"\"\"
+"""
+
+    response = client.models.generate_content(
+        model="models/gemini-2.0-flash",
+        contents=prompt
+    )
+
+    logger.debug("Additional flashcards generated")
+    return response.text.strip()
+
+
+
 # ========== ROUTES ==========
 
 @app.get("/", response_class=HTMLResponse)
@@ -123,11 +155,24 @@ async def index(request: Request):
     logger.info("GET / - Home page")
     return templates.TemplateResponse("index.html", {"request": request})
 
+
+
 @app.post("/analyze", response_class=HTMLResponse)
 async def analyze(request: Request, video_url: str = Form(...)):
     try:
         logger.info(f"POST /analyze - URL: {video_url}")
         video_id = video_url.split("v=")[-1].split("&")[0]
+        if video_id in cache:
+            logger.info(f"Using cached results for video_id: {video_id}")
+            return templates.TemplateResponse("result.html", {
+        "request": request,
+        "title": cache[video_id]["title"],
+        "duration": cache[video_id]["duration"],
+        "upload_date": cache[video_id]["upload_date"],
+        "summary": cache[video_id]["summary"],
+        "flashcards": cache[video_id]["flashcards"],
+        "video_id": video_id
+        })
         logger.info(f"Extracted video_id: {video_id}")
 
         ydl_opts = {'quiet': True, 'skip_download': True, 'format': 'bestaudio/best'}
@@ -208,4 +253,40 @@ async def ask_question(request: Request, video_id: str = Form(...), query: str =
 
     except Exception as e:
         logger.exception("Error in /ask route")
+        return templates.TemplateResponse("error.html", {"request": request, "error_message": str(e)})
+
+
+@app.post("/flashcards", response_class=HTMLResponse)
+async def regenerate_flashcards(request: Request, video_id: str = Form(...)):
+    try:
+        logger.info(f"POST /flashcards - Regenerating for video_id: {video_id}")
+        if video_id not in cache:
+            return templates.TemplateResponse("error.html", {"request": request, "error_message": "Session expired or video not analyzed."})
+
+        transcript_text = " ".join(cache[video_id]["chunks"])
+        initial_flashcards = cache[video_id]["flashcards"]
+
+# Later (e.g. on a “More” button click)
+        more_flashcards = generate_additional_flashcards(
+        transcript_text=transcript_text,
+        existing_flashcards=initial_flashcards,
+        num_cards=5
+        )
+
+        # Update cache
+        combined_flashcards = initial_flashcards.strip() + "\n\n" + more_flashcards.strip()
+        cache[video_id]["flashcards"] = combined_flashcards
+
+        logger.info("Flashcards regenerated successfully.")
+        return templates.TemplateResponse("result.html", {
+            "request": request,
+            "title": cache[video_id]["title"],
+            "duration": cache[video_id]["duration"],
+            "upload_date": cache[video_id]["upload_date"],
+            "summary": cache[video_id]["summary"],
+            "flashcards": combined_flashcards,
+            "video_id": video_id
+        })
+    except Exception as e:
+        logger.exception("Error in /flashcards route")
         return templates.TemplateResponse("error.html", {"request": request, "error_message": str(e)})

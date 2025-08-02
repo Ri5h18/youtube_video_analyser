@@ -14,12 +14,13 @@ Turn any YouTube video into active recall flashcards with this web app that anal
 
 ## 🚀 Features
 
-✅ Paste a YouTube URL to generate flashcards automatically.
-✅ Extracts key concepts directly from video transcripts.
-✅ Intuitive, responsive web UI with dark mode.
-✅ Flashcards optimized for spaced repetition and active recall.
-✅ Built with FastAPI + EJS for a modern, maintainable stack.
-
+- ✅ Paste a YouTube URL to generate flashcards automatically.
+- ✅ Extracts key concepts directly from video transcripts.
+- ✅ Intuitive, responsive web UI with dark mode.
+- ✅ Flashcards optimized for spaced repetition and active recall.
+- ✅ Built with FastAPI + EJS for a modern, maintainable stack.
+- ✅ Q/A.
+![info page](static/image3.png)
 ---
 
 ## 📷 Screenshot
