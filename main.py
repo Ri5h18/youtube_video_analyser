@@ -29,7 +29,7 @@ text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=20
 
 # ========== FASTAPI APP ==========
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
 templates = Jinja2Templates(directory="templates")
 
 # ========== FUNCTIONS ==========
