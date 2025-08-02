@@ -1,6 +1,6 @@
 faiss-cpu==1.7.4
 numpy==1.24.4
-google
+google.genai
 langchain==0.1.13
 google-generativeai
 fastapi==0.110.0
