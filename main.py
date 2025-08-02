@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-
+import yt_dlp
 import google.generativeai as genai
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import datetime
@@ -15,6 +15,7 @@ import requests
 import os
 from dotenv import load_dotenv
 from google.genai import types
+from youtube_transcript_api import YouTubeTranscriptApi
 # ========== LOGGING SETUP ==========
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -36,21 +37,13 @@ cache = {}
 # ========== FUNCTIONS ==========
 
 def get_transcript(video_id):
-    logger.info(f"Fetching transcript for video_id: {video_id}")
-    url = "https://youtube-v2.p.rapidapi.com/video/subtitles"
-    querystring = {"video_id": video_id}
-    headers = {
-        "X-RapidAPI-Key": RAPIDAPI_KEY,
-        "X-RapidAPI-Host": "youtube-v2.p.rapidapi.com"
-    }
-    response = requests.get(url, headers=headers, params=querystring)
-    if response.status_code != 200:
-        logger.error(f"Failed to fetch transcript. Status: {response.status_code}")
+    try:
+        transcript = YouTubeTranscriptApi.get_transcript(video_id)
+        logger.info(transcript)
+        return " ".join([item['text'] for item in transcript])
+    except Exception as e:
+        logger.error(f"Transcript error: {e}")
         return None
-    data = response.json()
-    subtitles = data.get("subtitles", [])
-    logger.info(f"Fetched {len(subtitles)} subtitles")
-    return " ".join(sub["text"] for sub in subtitles)
 import time
 def embed_chunks(chunks):
     # logger.info(chunks)
